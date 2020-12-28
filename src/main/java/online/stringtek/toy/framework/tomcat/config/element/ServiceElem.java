@@ -5,6 +5,6 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class Server {
-    private List<Service> serviceList;
+public class ServiceElem {
+    private List<ConnectorElem> connectorElemList;
 }

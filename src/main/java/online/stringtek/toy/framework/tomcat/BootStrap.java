@@ -1,53 +1,40 @@
 package online.stringtek.toy.framework.tomcat;
 
 import lombok.extern.slf4j.Slf4j;
-import online.stringtek.toy.framework.tomcat.config.element.Connector;
-import online.stringtek.toy.framework.tomcat.config.element.Server;
-import online.stringtek.toy.framework.tomcat.config.element.Service;
+import online.stringtek.toy.framework.tomcat.config.element.ConnectorElem;
+import online.stringtek.toy.framework.tomcat.config.element.ServerElem;
+import online.stringtek.toy.framework.tomcat.config.element.ServiceElem;
 import online.stringtek.toy.framework.tomcat.config.parser.ServerXmlParser;
-import online.stringtek.toy.framework.tomcat.http.pojo.ResponseBuilder;
+import online.stringtek.toy.framework.tomcat.server.Server;
+import online.stringtek.toy.framework.tomcat.server.NioServer;
 import org.dom4j.DocumentException;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Slf4j
 public class BootStrap {
-
-    public static void start(Connector connector) throws IOException {
-        //默认HTTP1.1暂不处理其他，当前使用BIO
-        int port = connector.getPort();
-        ServerSocket serverSocket=new ServerSocket(port);
-        log.info("server listen on "+serverSocket.getInetAddress().getHostAddress()+":"+port);
-        while(true){
-            Socket socket = serverSocket.accept();
-            log.info("client connected");
-            OutputStream out = socket.getOutputStream();
-            String content="玩具Tomcat1.0响应";
-            ResponseBuilder builder=new ResponseBuilder();
-            builder.setInfo("HTTP/1.1 200 OK");
-            builder.getHeader().put("Content-Type","text/html;charset=utf-8");
-            builder.getHeader().put("Content-Length",content.getBytes().length+"");
-            builder.setContent(content);
-            System.out.println(builder.build());
-            out.write(builder.build().getBytes(StandardCharsets.UTF_8));
-            out.flush();
+    public static void start(ConnectorElem connectorElem) throws IOException {
+        int port = connectorElem.getPort();
+        Server server=null;
+        switch (connectorElem.getProtocol()){
+//            case HTTP1_0:server=new Http10NioServer();break;
+//            case HTTP1_1:server=new Http11NioServer();break;
+//            case HTTP2_0:server=new Http20NioServer();break;
+            default:server=new NioServer();break;
         }
+        server.start(connectorElem.getPort());
     }
 
 
     public static void main(String[] args) throws DocumentException, IOException {
         ServerXmlParser serverXmlParser=new ServerXmlParser();
-        Server server = serverXmlParser.parse();
-        List<Service> serviceList = server.getServiceList();
-        for (Service service : serviceList) {
-            List<Connector> connectorList = service.getConnectorList();
-            for (Connector connector : connectorList) {
-                start(connector);
+        ServerElem serverElem = serverXmlParser.parse();
+        List<ServiceElem> serviceList = serverElem.getServiceList();
+        for (ServiceElem service : serviceList) {
+            List<ConnectorElem> connectorElemList = service.getConnectorElemList();
+            for (ConnectorElem connectorElem : connectorElemList) {
+                start(connectorElem);
             }
         }
     }

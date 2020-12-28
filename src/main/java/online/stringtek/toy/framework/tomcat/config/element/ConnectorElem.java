@@ -4,7 +4,7 @@ import lombok.Data;
 import online.stringtek.toy.framework.tomcat.http.eums.Protocol;
 
 @Data
-public class Connector {
+public class ConnectorElem {
     private int port;
     private Protocol protocol;
 }
