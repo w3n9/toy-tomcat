@@ -18,6 +18,7 @@
         <junit.version>5.7.0</junit.version>
         <commons.lang3.version>3.11</commons.lang3.version>
         <hutool.version>5.5.4</hutool.version>
+        <jaxen.version>1.2.0</jaxen.version>
     </properties>
     <dependencies>
         <dependency>
@@ -61,6 +62,13 @@
             <artifactId>hutool-all</artifactId>
             <version>${hutool.version}</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/jaxen/jaxen -->
+        <dependency>
+            <groupId>jaxen</groupId>
+            <artifactId>jaxen</artifactId>
+            <version>${jaxen.version}</version>
+        </dependency>
+
 
 
     </dependencies>
