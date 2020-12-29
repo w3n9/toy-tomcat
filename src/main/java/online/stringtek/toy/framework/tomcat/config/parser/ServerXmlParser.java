@@ -16,7 +16,7 @@ import java.util.List;
 public class ServerXmlParser {
     private final static String defaultPort="8080";
     private final static String defaultProtocol="HTTP/1.1";
-    private final static String serverXmlPath="conf/server.xml";
+    private final static String serverXmlPath= "WEB-INF/conf/server.xml";
     public ServerElem parse(String xmlPath) throws DocumentException {
         SAXReader reader=new SAXReader();
         Document document = reader.read(getClass().getClassLoader().getResourceAsStream(xmlPath));

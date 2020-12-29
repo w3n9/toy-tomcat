@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ResponseUtil {
-    public static Response header( Protocol protocol, Status status, Map<Header,String> headers,String body){
+    public static Response header(Protocol protocol, Status status, Map<Header,String> headers,String body){
         Response response=new Response();
         response.setProtocol(protocol);
         response.setStatus(status);

@@ -1,16 +1,10 @@
 package online.stringtek.toy.framework.tomcat.server;
 
 import lombok.extern.slf4j.Slf4j;
-import online.stringtek.toy.framework.tomcat.http.Request;
-import online.stringtek.toy.framework.tomcat.http.Response;
-import online.stringtek.toy.framework.tomcat.util.RequestUtil;
-import online.stringtek.toy.framework.tomcat.util.ResponseUtil;
-import org.apache.commons.lang3.ArrayUtils;
+import online.stringtek.toy.framework.tomcat.server.handler.NioHttpHandler;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 

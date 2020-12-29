@@ -16,6 +16,11 @@ public class Response {
     private String body;
     public String toString(){
         //TODO
-        return "";
+        StringBuilder sb=new StringBuilder();
+        sb.append(protocol.getVal()).append(' ').append(status.getCode()).append(' ').append(status.getVal()).append("\r\n");
+        headers.forEach((k,v)-> sb.append(k).append(": ").append(v).append("\r\n"));
+        sb.append("\r\n");
+        sb.append(body==null?"":body);
+        return sb.toString();
     }
 }
