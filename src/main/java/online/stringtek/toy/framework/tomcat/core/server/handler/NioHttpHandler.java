@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class NioHttpHandler {
+public class NioHttpHandler implements Runnable{
     private final static Pattern pattern = Pattern.compile("WEB-INF");
     private final static String webPrefix="web";
     private final static int BUFFER_SIZE=1024*8;
@@ -35,6 +35,7 @@ public class NioHttpHandler {
         this.servletClassMap=servletClassMap;
         this.servletMap=new HashMap<>();
     }
+
     public void handle(){
         if(!read()){
             try {
@@ -67,12 +68,14 @@ public class NioHttpHandler {
             if(!exit){
                 byte[] bytes = ArrayUtils.toPrimitive(byteList.toArray(new Byte[0]));
                 request = NioRequestUtil.build(bytes);
+                if(request==null)
+                    exit = true;
             }
         }catch (Exception e){
             exit=true;
             e.printStackTrace();
         }finally {
-            if(exit&sc!=null) {
+            if(exit&&sc!=null) {
                 try {
                     sc.close();
                 } catch (IOException e) {
@@ -138,5 +141,10 @@ public class NioHttpHandler {
             response= NioResponseUtil.ok(sc,"");
             servlet.service(request,response);
         }
+    }
+
+    @Override
+    public void run() {
+        handle();
     }
 }

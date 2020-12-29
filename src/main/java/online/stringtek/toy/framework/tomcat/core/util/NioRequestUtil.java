@@ -21,24 +21,29 @@ public class NioRequestUtil {
     private static final String firstLinePattern="^(GET|POST|PUT|PATCH|DELETE|COPY|HEAD|OPTIONS|LINK|UNLINK|PURGE|LOCK|UNLOCK|PROPFIND|VIEW) (.*) (.*)$";
     public static NioRequest build(byte[] bytes) throws IOException {
         log.info("building request...");
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new ByteInputStream(bytes,bytes.length), StandardCharsets.UTF_8));
-        String line = reader.readLine();
-        Pattern pattern=Pattern.compile(firstLinePattern);
-        Matcher matcher = pattern.matcher(line);
-        NioRequest request=new NioRequest();
-        if(matcher.find()){
-            request.setMethod(Method.parse(matcher.group(1)));
-            request.setPath(matcher.group(2));
-            request.setProtocol(Protocol.parse(matcher.group(3)));
-            while(!StringUtils.isEmpty(line=reader.readLine())){
+        try{
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(new ByteInputStream(bytes,bytes.length), StandardCharsets.UTF_8));
+            String line = reader.readLine();
+            Pattern pattern=Pattern.compile(firstLinePattern);
+            Matcher matcher = pattern.matcher(line);
+            NioRequest request=new NioRequest();
+            if(matcher.find()){
+                request.setMethod(Method.parse(matcher.group(1)));
+                request.setPath(matcher.group(2));
+                request.setProtocol(Protocol.parse(matcher.group(3)));
+                while(!StringUtils.isEmpty(line=reader.readLine())){
 //                System.out.println(line);
-                String[] field = line.split(":");
-                request.getHeaders().put(Header.parse(StringUtils.trim(field[0])),StringUtils.trim(field[1]));
+                    String[] field = line.split(":");
+                    request.getHeaders().put(Header.parse(StringUtils.trim(field[0])),StringUtils.trim(field[1]));
+                }
+            }else{
+                //TODO
             }
-        }else{
-            //TODO
+            return request;
+        }catch (Exception e){
+            return null;
         }
-        return request;
+
     }
 }
