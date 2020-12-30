@@ -1,6 +1,8 @@
 package online.stringtek.toy.framework.tomcat.core.server;
 
+import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 import lombok.extern.slf4j.Slf4j;
+import online.stringtek.toy.framework.tomcat.core.common.SynchronizedQueue;
 import online.stringtek.toy.framework.tomcat.core.factory.NioThreadFactory;
 import online.stringtek.toy.framework.tomcat.core.server.handler.NioHttpHandler;
 
@@ -13,10 +15,12 @@ import java.util.concurrent.*;
 @Slf4j
 public class NioServer extends Server {
     private Selector selector;
-    private Map<String, String> servletMap;
+    private final Map<String, String> servletMap;
+    private final SynchronizedQueue<SocketChannel> queue;
 
     public NioServer(Map<String, String> servletMap) {
         this.servletMap = servletMap;
+        this.queue=new SynchronizedQueue<>();
     }
 
     @Override
@@ -58,10 +62,15 @@ public class NioServer extends Server {
                     sc.configureBlocking(false);
                     sc.register(selector, SelectionKey.OP_READ);
                 } else if (selectionKey.isValid() && selectionKey.isReadable()) {
-                    System.out.println("readable socket:" + ((SocketChannel) selectionKey.channel()).getRemoteAddress());
-                    log.info("readable");
+                    SocketChannel sc = (SocketChannel) selectionKey.channel();
+//                    //单线程调用
 //                    new NioHttpHandler((SocketChannel) selectionKey.channel(),servletMap).handle();
-                    tp.execute(new NioHttpHandler((SocketChannel) selectionKey.channel(), servletMap));
+                    //读写操作多线程化
+                    if(!queue.isContainsIfNotThenOffer(sc)){
+                        //第二次进入的时候要判断是否被关闭了
+                        if(!sc.socket().isClosed())
+                            tp.execute(new NioHttpHandler((SocketChannel) selectionKey.channel(), servletMap,queue));
+                    }
                 }
             }
         }

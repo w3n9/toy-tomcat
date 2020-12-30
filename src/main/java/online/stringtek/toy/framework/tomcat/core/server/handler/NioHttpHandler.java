@@ -2,6 +2,8 @@ package online.stringtek.toy.framework.tomcat.core.server.handler;
 
 import cn.hutool.core.io.file.FileReader;
 import lombok.extern.slf4j.Slf4j;
+import online.stringtek.toy.framework.tomcat.core.BootStrap;
+import online.stringtek.toy.framework.tomcat.core.common.SynchronizedQueue;
 import online.stringtek.toy.framework.tomcat.core.http.NioRequest;
 import online.stringtek.toy.framework.tomcat.core.http.NioResponse;
 import online.stringtek.toy.framework.tomcat.core.http.eums.Method;
@@ -22,7 +24,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class NioHttpHandler implements Runnable{
     private final static Pattern pattern = Pattern.compile("WEB-INF");
-    private final static String webPrefix="web";
+    private final static String webPrefix="/tomcat/webapps";
     private final static int BUFFER_SIZE=1024*8;
     private ByteBuffer buffer=ByteBuffer.allocate(BUFFER_SIZE);
     private final SocketChannel sc;
@@ -30,10 +32,16 @@ public class NioHttpHandler implements Runnable{
     private Map<String, Servlet> servletMap;
     private NioRequest request;
     private NioResponse response;
+    private final SynchronizedQueue<SocketChannel> queue;
     public NioHttpHandler(SocketChannel sc,Map<String,String> servletClassMap){
+        this(sc,servletClassMap,null);
+    }
+
+    public NioHttpHandler(SocketChannel sc, Map<String,String> servletClassMap, SynchronizedQueue<SocketChannel> queue){
         this.sc=sc;
         this.servletClassMap=servletClassMap;
         this.servletMap=new HashMap<>();
+        this.queue=queue;
     }
 
     public void handle(){
@@ -122,19 +130,22 @@ public class NioHttpHandler implements Runnable{
      * 处理Servlet
      */
     void handleServlet() throws Exception {
-        if(!servletMap.containsKey(request.getPath())){
-            String className = servletClassMap.get(request.getPath());
-            Class<?> clazz = Class.forName(className);
+        String reqPath = request.getPath();
+        if(!servletMap.containsKey(reqPath)){
+            String className = servletClassMap.get(reqPath);
+            String[] field = reqPath.split("/");
+            //TODO 更严格的处理
+            Class<?> clazz = Class.forName(className,true, BootStrap.classLoaderMap.get(field[1]));
             try {
                 Servlet servlet = (Servlet)clazz.getConstructor().newInstance();
-                servletMap.put(request.getPath(),servlet);
+                servletMap.put(reqPath,servlet);
             } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 e.printStackTrace();
                 response=NioResponseUtil.internalServerError(sc);
                 return;
             }
         }
-        Servlet servlet = servletMap.get(request.getPath());
+        Servlet servlet = servletMap.get(reqPath);
         if(servlet==null){
             response=NioResponseUtil.notFound(sc);
         }else{
@@ -146,5 +157,6 @@ public class NioHttpHandler implements Runnable{
     @Override
     public void run() {
         handle();
+        queue.poll();
     }
 }
