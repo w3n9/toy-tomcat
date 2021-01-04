@@ -3,8 +3,8 @@
     <service>
         <connector port="8080" protocol="HTTP/1.1" />
         <engine>
-            <host name="localhost" appBase="C:\Users\StringTek\IdeaProjects\toy-tomcat\webapps"/>
-            <host name="example.com" appBase="C:\Users\StringTek\IdeaProjects\toy-tomcat\webapps2"/>
+            <host name="localhost" appBase="/home/stringtek/IdeaProjects/toy-tomcat/webapps"/>
+            <host name="example.com" appBase="/home/stringtek/IdeaProjects/toy-tomcat/webapps2"/>
         </engine>
     </service>
 </server>

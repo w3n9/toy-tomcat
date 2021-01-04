@@ -1,6 +1,7 @@
 package online.stringtek.toy.framework.tomcat.core.config.parser;
 
 import online.stringtek.toy.framework.tomcat.core.config.element.server.ConnectorElem;
+import online.stringtek.toy.framework.tomcat.core.config.element.server.EngineElem;
 import online.stringtek.toy.framework.tomcat.core.config.element.server.ServerElem;
 import online.stringtek.toy.framework.tomcat.core.config.element.server.ServiceElem;
 import online.stringtek.toy.framework.tomcat.core.http.eums.Protocol;
@@ -15,7 +16,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServerXmlParser {
     private final static String defaultPort="8080";
@@ -61,7 +64,21 @@ public class ServerXmlParser {
                         connector.setProtocol(protocolEnum);
                     }
                 }
-
+                //解析engine
+                //        <engine>
+                //            <host name="localhost" appBase="/home/stringtek/IdeaProjects/toy-tomcat/webapps"/>
+                //            <host name="example.com" appBase="/home/stringtek/IdeaProjects/toy-tomcat/webapps"/>
+                //        </engine>
+                Element engineElem = serviceElem.element("engine");
+                List<?> hostElemList = engineElem.elements("host");
+                EngineElem engine=new EngineElem();
+                service.setEngine(engine);
+                Map<String,String> hostMap=new HashMap<>();
+                engine.setHostMap(hostMap);
+                for (Object hostElemObj : hostElemList) {
+                    Element hostElem=(Element)hostElemObj;
+                    hostMap.put(hostElem.attributeValue("name"),hostElem.attributeValue("appBase"));
+                }
             }
         }
         return serverElem;

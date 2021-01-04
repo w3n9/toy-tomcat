@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" version="2.5">
     <servlet>
-        <servlet-name>BServlet</servlet-name>
-        <servlet-class>test.servlet.BServlet</servlet-class>
+        <servlet-name>TestServlet</servlet-name>
+        <servlet-class>test.TestServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>BServlet</servlet-name>
-        <url-pattern>/b</url-pattern>
+        <servlet-name>TestServlet</servlet-name>
+        <url-pattern>/test</url-pattern>
     </servlet-mapping>
 </web-app>

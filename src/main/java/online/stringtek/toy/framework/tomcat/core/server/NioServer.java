@@ -3,6 +3,7 @@ package online.stringtek.toy.framework.tomcat.core.server;
 
 import lombok.extern.slf4j.Slf4j;
 import online.stringtek.toy.framework.tomcat.core.common.SynchronizedQueue;
+import online.stringtek.toy.framework.tomcat.core.component.Mapper;
 import online.stringtek.toy.framework.tomcat.core.factory.NioThreadFactory;
 import online.stringtek.toy.framework.tomcat.core.server.handler.NioHttpHandler;
 
@@ -15,11 +16,11 @@ import java.util.concurrent.*;
 @Slf4j
 public class NioServer extends Server {
     private Selector selector;
-    private final Map<String, String> servletMap;
+    private final Mapper mapper;
     private final SynchronizedQueue<SocketChannel> queue;
 
-    public NioServer(Map<String, String> servletMap) {
-        this.servletMap = servletMap;
+    public NioServer(Mapper mapper) {
+        this.mapper = mapper;
         this.queue=new SynchronizedQueue<>();
     }
 
@@ -69,7 +70,7 @@ public class NioServer extends Server {
                     if(!queue.isContainsIfNotThenOffer(sc)){
                         //第二次进入的时候要判断是否被关闭了
                         if(!sc.socket().isClosed())
-                            tp.execute(new NioHttpHandler((SocketChannel) selectionKey.channel(), servletMap,queue));
+                            tp.execute(new NioHttpHandler((SocketChannel) selectionKey.channel(), mapper,queue));
                     }
                 }
             }

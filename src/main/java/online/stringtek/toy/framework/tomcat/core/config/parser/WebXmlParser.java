@@ -17,6 +17,10 @@ public class WebXmlParser {
         return parseByRelativePath(serverXmlPath,"");
     }
 
+    public Map<String,String> parseByAbsolutePath(String absolutePath) throws IOException, DocumentException {
+        InputStream inputStream = new FileInputStream(new File(absolutePath));
+        return parse(inputStream,"");
+    }
     public Map<String,String> parseByAbsolutePath(String absolutePath,String prefix) throws IOException, DocumentException {
         InputStream inputStream = new FileInputStream(new File(absolutePath));
         return parse(inputStream,prefix);

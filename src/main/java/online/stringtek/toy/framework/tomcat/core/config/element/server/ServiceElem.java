@@ -7,4 +7,5 @@ import java.util.List;
 @Data
 public class ServiceElem {
     private List<ConnectorElem> connectorElemList;
+    private EngineElem engine;
 }

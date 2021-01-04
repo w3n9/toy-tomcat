@@ -4,10 +4,12 @@ import cn.hutool.core.io.file.FileReader;
 import lombok.extern.slf4j.Slf4j;
 import online.stringtek.toy.framework.tomcat.core.BootStrap;
 import online.stringtek.toy.framework.tomcat.core.common.SynchronizedQueue;
+import online.stringtek.toy.framework.tomcat.core.component.MappedHost;
+import online.stringtek.toy.framework.tomcat.core.component.Mapper;
 import online.stringtek.toy.framework.tomcat.core.http.NioRequest;
 import online.stringtek.toy.framework.tomcat.core.http.NioResponse;
 import online.stringtek.toy.framework.tomcat.core.http.eums.Method;
-import online.stringtek.toy.framework.tomcat.core.servlet.Servlet;
+import online.stringtek.toy.framework.tomcat.core.api.Servlet;
 import online.stringtek.toy.framework.tomcat.core.util.NioRequestUtil;
 import online.stringtek.toy.framework.tomcat.core.util.NioResponseUtil;
 import org.apache.commons.lang3.ArrayUtils;
@@ -28,18 +30,18 @@ public class NioHttpHandler implements Runnable{
     private final static int BUFFER_SIZE=1024*8;
     private ByteBuffer buffer=ByteBuffer.allocate(BUFFER_SIZE);
     private final SocketChannel sc;
-    private final Map<String,String> servletClassMap;
+    private final Mapper mapper;
     private Map<String, Servlet> servletMap;
     private NioRequest request;
     private NioResponse response;
     private final SynchronizedQueue<SocketChannel> queue;
-    public NioHttpHandler(SocketChannel sc,Map<String,String> servletClassMap){
-        this(sc,servletClassMap,null);
+    public NioHttpHandler(SocketChannel sc,Mapper mapper){
+        this(sc,mapper,null);
     }
 
-    public NioHttpHandler(SocketChannel sc, Map<String,String> servletClassMap, SynchronizedQueue<SocketChannel> queue){
+    public NioHttpHandler(SocketChannel sc, Mapper mapper, SynchronizedQueue<SocketChannel> queue){
         this.sc=sc;
-        this.servletClassMap=servletClassMap;
+        this.mapper=mapper;
         this.servletMap=new HashMap<>();
         this.queue=queue;
     }
@@ -79,9 +81,11 @@ public class NioHttpHandler implements Runnable{
                 if(request==null)
                     exit = true;
             }
+            return exit;
         }catch (Exception e){
             exit=true;
             e.printStackTrace();
+            return true;
         }finally {
             if(exit&&sc!=null) {
                 try {
@@ -90,21 +94,17 @@ public class NioHttpHandler implements Runnable{
                     e.printStackTrace();
                 }
             }
-            return exit;
         }
     }
     public void write() throws Exception {
-        if(isServlet())
-            handleServlet();
+        Servlet servlet=Mapper.getServlet(mapper,request);
+        if(servlet!=null)
+            handleServlet(servlet);
         else
             handleStatic();
         response.flush();
         sc.close();
     }
-    boolean isServlet(){
-        return servletClassMap.containsKey(request.getPath());
-    }
-
 
     /**
      * 处理静态资源
@@ -112,8 +112,8 @@ public class NioHttpHandler implements Runnable{
      */
     void handleStatic() throws IOException {
         if(Method.GET==request.getMethod()){
-            String path = NioHttpHandler.class.getResource("/").getPath();
-            String absolutePath=path+webPrefix+request.getPath();
+            MappedHost host = mapper.getHostMap().get(request.getHost());
+            String absolutePath=host.getAppBase()+request.getPath();
             File file=new File(absolutePath);
             Matcher matcher = pattern.matcher(request.getPath());
             //排除WEB-INF下的文件
@@ -129,23 +129,7 @@ public class NioHttpHandler implements Runnable{
     /**
      * 处理Servlet
      */
-    void handleServlet() throws Exception {
-        String reqPath = request.getPath();
-        if(!servletMap.containsKey(reqPath)){
-            String className = servletClassMap.get(reqPath);
-            String[] field = reqPath.split("/");
-            //TODO 更严格的处理
-            Class<?> clazz = Class.forName(className,true, BootStrap.classLoaderMap.get(field[1]));
-            try {
-                Servlet servlet = (Servlet)clazz.getConstructor().newInstance();
-                servletMap.put(reqPath,servlet);
-            } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                e.printStackTrace();
-                response=NioResponseUtil.internalServerError(sc);
-                return;
-            }
-        }
-        Servlet servlet = servletMap.get(reqPath);
+    void handleServlet(Servlet servlet) throws Exception {
         if(servlet==null){
             response=NioResponseUtil.notFound(sc);
         }else{

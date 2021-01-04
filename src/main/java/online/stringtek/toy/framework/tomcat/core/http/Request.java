@@ -5,4 +5,5 @@ import online.stringtek.toy.framework.tomcat.core.http.eums.Method;
 public interface Request {
     Method getMethod();
     String getHost();
+    String getPath();
 }
