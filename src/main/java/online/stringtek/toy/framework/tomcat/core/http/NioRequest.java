@@ -15,4 +15,9 @@ public class NioRequest implements Request {
     private Protocol protocol;
     private Map<Header,String> headers=new HashMap<>();
     private String body;
+
+    @Override
+    public String getHost() {
+        return headers.get(Header.HOST);
+    }
 }

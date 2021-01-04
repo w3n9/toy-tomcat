@@ -1,6 +1,5 @@
 package online.stringtek.toy.framework.tomcat.core.util;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import lombok.extern.slf4j.Slf4j;
 import online.stringtek.toy.framework.tomcat.core.http.NioRequest;
 import online.stringtek.toy.framework.tomcat.core.http.eums.Header;
@@ -9,6 +8,7 @@ import online.stringtek.toy.framework.tomcat.core.http.eums.Protocol;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +23,7 @@ public class NioRequestUtil {
         log.info("building request...");
         try{
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(new ByteInputStream(bytes,bytes.length), StandardCharsets.UTF_8));
+                    new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8));
             String line = reader.readLine();
             Pattern pattern=Pattern.compile(firstLinePattern);
             Matcher matcher = pattern.matcher(line);
