@@ -8,11 +8,11 @@ import online.stringtek.toy.framework.tomcat.core.config.parser.ServerXmlParser;
 import online.stringtek.toy.framework.tomcat.core.config.parser.WebXmlParser;
 import online.stringtek.toy.framework.tomcat.core.server.Server;
 import online.stringtek.toy.framework.tomcat.core.server.NioServer;
+import org.apache.commons.lang3.StringUtils;
 import org.dom4j.DocumentException;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -28,7 +28,7 @@ public class BootStrap {
     public static Map<String,ClassLoader> classLoaderMap=new HashMap<>();//写入的时候是单线程操作所以不需要加锁
 
 
-    private final static String defaultWebAppsPath="tomcat/webapps";
+    private final static String defaultWebAppsPath= "webapps";
     public static void start(ConnectorElem connectorElem,Map<String,String> servletMap) throws IOException {
         int port = connectorElem.getPort();
         Server server=null;
@@ -43,10 +43,18 @@ public class BootStrap {
 
 
     public static void main(String[] args) throws DocumentException, IOException {
+        String serverXmlPath=System.getProperty("serverXml");
+        String webXmlPath=System.getProperty("webXml");
+        if(StringUtils.isEmpty(serverXmlPath)||StringUtils.isEmpty(webXmlPath)){
+            log.error("please specify the location of server.xml and web.xml");
+            return;
+        }
+        log.info("use server.xml located at {}",serverXmlPath);
+        log.info("use web.xml located at {}",webXmlPath);
         ServerXmlParser serverXmlParser=new ServerXmlParser();
-        ServerElem serverElem = serverXmlParser.parse();
+        ServerElem serverElem = serverXmlParser.parseByAbsolutePath(serverXmlPath);
         //这里偷懒，初始化的时候就去读取所有的webapps下的web.xml
-        Map<String, String> servletMap = parseWebXml();
+        Map<String, String> servletMap = parseWebXml(webXmlPath);
         List<ServiceElem> serviceList = serverElem.getServiceList();
         for (ServiceElem service : serviceList) {
             List<ConnectorElem> connectorElemList = service.getConnectorElemList();
@@ -56,9 +64,9 @@ public class BootStrap {
         }
     }
 
-    private static Map<String, String> parseWebXml() throws DocumentException, IOException {
+    private static Map<String, String> parseWebXml(String globalWebXmlPath) throws DocumentException, IOException {
         WebXmlParser webXmlParser=new WebXmlParser();
-        Map<String, String> servletMap = webXmlParser.parse();
+        Map<String, String> servletMap = webXmlParser.parseByAbsolutePath(globalWebXmlPath,"");
         String path = BootStrap.class.getResource("/").getPath();
         String webAppsPath=path+defaultWebAppsPath;
         File webAppsDir=new File(webAppsPath);

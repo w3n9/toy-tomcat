@@ -10,16 +10,23 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ServerXmlParser {
     private final static String defaultPort="8080";
     private final static String defaultProtocol="HTTP/1.1";
-    private final static String serverXmlPath= "tomcat/conf/server.xml";
-    public ServerElem parse(String xmlPath) throws DocumentException {
+    private final static String serverXmlPath= "conf/server.xml";
+    public ServerElem parseByAbsolutePath(String path) throws DocumentException, FileNotFoundException {
+        return parse(new FileInputStream(new File(path)));
+    }
+    public ServerElem parse(InputStream inputStream) throws DocumentException {
         SAXReader reader=new SAXReader();
-        Document document = reader.read(getClass().getClassLoader().getResourceAsStream(xmlPath));
+        Document document = reader.read(inputStream);
         //获取根
         Element root = document.getRootElement();
         ServerElem serverElem =new ServerElem();
@@ -50,7 +57,7 @@ public class ServerXmlParser {
                         connector.setPort(Integer.parseInt(port));
                         Protocol protocolEnum = Protocol.parse(protocol);
                         if(protocolEnum==Protocol.UNSUPPORTED)
-                            throw new XmlParsingException(xmlPath,protocol+"协议不存在");
+                            throw new XmlParsingException(null,protocol+"协议不存在");
                         connector.setProtocol(protocolEnum);
                     }
                 }
@@ -60,6 +67,7 @@ public class ServerXmlParser {
         return serverElem;
     }
     public ServerElem parse() throws DocumentException {
-        return parse(serverXmlPath);
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(serverXmlPath);
+        return parse(inputStream);
     }
 }

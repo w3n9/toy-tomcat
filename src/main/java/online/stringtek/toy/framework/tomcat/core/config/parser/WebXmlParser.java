@@ -1,6 +1,5 @@
 package online.stringtek.toy.framework.tomcat.core.config.parser;
 
-import jdk.internal.util.xml.impl.Input;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -13,7 +12,7 @@ import java.util.Map;
 
 public class WebXmlParser {
     //全局web.xml
-    private final static String serverXmlPath= "tomcat/conf/web.xml";
+    private final static String serverXmlPath= "conf/web.xml";
     public Map<String,String> parse() throws DocumentException {
         return parseByRelativePath(serverXmlPath,"");
     }

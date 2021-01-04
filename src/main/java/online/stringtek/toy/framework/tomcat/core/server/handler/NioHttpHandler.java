@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class NioHttpHandler implements Runnable{
     private final static Pattern pattern = Pattern.compile("WEB-INF");
-    private final static String webPrefix="/tomcat/webapps";
+    private final static String webPrefix= "/webapps";
     private final static int BUFFER_SIZE=1024*8;
     private ByteBuffer buffer=ByteBuffer.allocate(BUFFER_SIZE);
     private final SocketChannel sc;
